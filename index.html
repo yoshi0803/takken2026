@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>宅建士2026 学習管理</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            max-width: 640px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, #b71c1c, #e53935);
+            color: white;
+            padding: 14px 16px 12px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+        }
+        .header h1 { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+        .countdown { display: flex; justify-content: center; gap: 10px; }
+        .countdown-item { background: rgba(255,255,255,0.18); border-radius: 10px; padding: 5px 12px; min-width: 60px; }
+        .countdown-number { font-size: 22px; font-weight: 800; line-height: 1.1; }
+        .countdown-label { font-size: 10px; opacity: 0.85; }
+        .exam-note { font-size: 10px; opacity: 0.75; margin-top: 6px; }
+
+        /* ===== SYNC STATUS BAR ===== */
+        .sync-bar {
+            background: #1a237e;
+            color: white;
+            padding: 8px 14px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .sync-indicator { display: flex; align-items: center; gap: 6px; }
+        .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #aaa; flex-shrink: 0; }
+        .sync-dot.connected { background: #69f0ae; animation: pulse 2s infinite; }
+        .sync-dot.syncing { background: #ffb300; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .sync-btn-small {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            border-radius: 12px;
+            padding: 3px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        /* ===== OVERALL PROGRESS ===== */
+        .overall-card {
+            background: white;
+            margin: 10px 10px 0;
+            border-radius: 14px;
+            padding: 14px 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        .overall-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .overall-title { font-size: 13px; font-weight: 700; color: #444; }
+        .overall-pct { font-size: 22px; font-weight: 800; color: #2e7d32; }
+        .progress-bar { background: #e8e8e8; border-radius: 20px; height: 12px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, #43a047, #81c784); transition: width 0.6s ease; }
+        .overall-sub { font-size: 11px; color: #999; margin-top: 5px; text-align: right; }
+
+        /* ===== TABS ===== */
+        .tabs-wrap { position: sticky; top: 94px; z-index: 100; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+        .tabs { display: flex; overflow-x: auto; scrollbar-width: none; }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab { flex: 0 0 auto; padding: 10px 16px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; background: none; color: #aaa; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; font-family: inherit; }
+        .tab.active { color: var(--clr); border-bottom-color: var(--clr); }
+
+        /* ===== CHAPTER ===== */
+        .chapter { display: none; padding: 10px; }
+        .chapter.active { display: block; }
+        .chapter-head { border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; color: white; }
+        .chapter-head h2 { font-size: 16px; font-weight: 800; }
+        .chapter-head .meta { font-size: 11px; opacity: 0.85; margin-top: 3px; line-height: 1.6; }
+        .schedule-chip { display: inline-block; background: rgba(255,255,255,0.2); border-radius: 20px; padding: 3px 10px; font-size: 11px; margin-top: 6px; }
+        .ch-prog-bar { margin-top: 10px; background: rgba(255,255,255,0.25); border-radius: 20px; height: 8px; overflow: hidden; }
+        .ch-prog-fill { height: 100%; border-radius: 20px; background: rgba(255,255,255,0.9); transition: width 0.5s ease; }
+        .ch-count { font-size: 11px; opacity: 0.8; margin-top: 4px; }
+
+        /* ===== SECTION CARD ===== */
+        .sec-card { background: white; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.07); overflow: hidden; transition: box-shadow 0.2s; }
+        .sec-card.expanded { box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
+        .sec-head { display: flex; align-items: center; padding: 13px 14px; cursor: pointer; user-select: none; gap: 10px; }
+        .sec-check { width: 24px; height: 24px; border: 2.5px solid #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; color: white; flex-shrink: 0; transition: all 0.25s; }
+        .sec-check.done { background: #43a047; border-color: #43a047; }
+        .sec-info { flex: 1; min-width: 0; }
+        .sec-name { font-size: 14px; font-weight: 700; color: #222; line-height: 1.3; }
+        .sec-refs { font-size: 11px; color: #999; margin-top: 2px; }
+        .sec-stars-preview { font-size: 14px; letter-spacing: -2px; flex-shrink: 0; }
+        .sec-arrow { font-size: 11px; color: #ccc; flex-shrink: 0; transition: transform 0.25s; }
+        .sec-card.expanded .sec-arrow { transform: rotate(180deg); }
+
+        /* ===== SECTION BODY ===== */
+        .sec-body { display: none; padding: 0 14px 14px; border-top: 1px solid #f0f0f0; }
+        .sec-card.expanded .sec-body { display: block; }
+        .body-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 14px; margin-bottom: 8px; }
+        .star-row { display: flex; gap: 4px; }
+        .star-btn { font-size: 28px; border: none; background: none; cursor: pointer; padding: 2px 4px; transition: transform 0.1s; line-height: 1; }
+        .star-btn:active { transform: scale(1.4); }
+        .star-level-label { font-size: 12px; color: #666; margin-top: 4px; min-height: 18px; font-weight: 600; }
+        .memo-input { width: 100%; min-height: 80px; border: 1.5px solid #e0e0e0; border-radius: 10px; padding: 10px 12px; font-size: 13px; font-family: inherit; color: #333; resize: vertical; outline: none; transition: border-color 0.2s; background: #fafafa; }
+        .memo-input:focus { border-color: #42a5f5; background: white; }
+        .complete-btn { width: 100%; margin-top: 12px; padding: 11px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+        .complete-btn.not-done { background: #e8f5e9; color: #2e7d32; }
+        .complete-btn.done { background: #43a047; color: white; }
+        .complete-btn:active { opacity: 0.8; }
+
+        /* ===== SETUP MODAL ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .modal-overlay.show { display: flex; align-items: flex-start; justify-content: center; padding: 20px; }
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 560px;
+            margin-top: 10px;
+        }
+        .modal h2 { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+        .modal .subtitle { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.6; }
+
+        .setup-step {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 14px;
+            border-left: 4px solid #e53935;
+        }
+        .setup-step .step-num { font-size: 11px; font-weight: 800; color: #e53935; letter-spacing: 1px; margin-bottom: 4px; }
+        .setup-step .step-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+        .setup-step .step-desc { font-size: 12px; color: #555; line-height: 1.7; }
+
+        .step-link {
+            display: inline-block;
+            background: #1976d2;
+            color: white;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-top: 8px;
+        }
+
+        .config-input {
+            width: 100%;
+            height: 120px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 11px;
+            font-family: monospace;
+            resize: vertical;
+            outline: none;
+            margin-top: 8px;
+            transition: border-color 0.2s;
+        }
+        .config-input:focus { border-color: #1976d2; }
+
+        .setup-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 8px;
+        }
+        .setup-btn.primary { background: #e53935; color: white; }
+        .setup-btn.google { background: white; color: #444; border: 2px solid #e0e0e0; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .setup-btn:active { opacity: 0.8; }
+        .setup-btn.secondary { background: #f5f5f5; color: #555; font-size: 13px; margin-top: 6px; }
+
+        .modal-note { font-size: 11px; color: #999; text-align: center; margin-top: 14px; line-height: 1.6; }
+        .error-msg { background: #ffebee; color: #c62828; border-radius: 8px; padding: 10px 12px; font-size: 12px; margin-top: 10px; display: none; }
+
+        /* ===== AUTH SECTION ===== */
+        .auth-section { margin: 10px 10px 0; }
+        .auth-card {
+            background: white;
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            text-align: center;
+        }
+        .auth-card .user-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+        .auth-card .user-email { font-size: 12px; color: #888; }
+        .sign-out-link { font-size: 11px; color: #e53935; cursor: pointer; margin-top: 6px; display: inline-block; }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            z-index: 9999;
+            transition: transform 0.3s ease;
+            white-space: nowrap;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+    <h1>🏠 宅建士2026 学習管理</h1>
+    <div class="countdown">
+        <div class="countdown-item">
+            <div class="countdown-number" id="cd-days">--</div>
+            <div class="countdown-label">日</div>
+        </div>
+        <div class="countdown-item">
+            <div class="countdown-number" id="cd-hours">--</div>
+            <div class="countdown-label">時間</div>
+        </div>
+        <div class="countdown-item">
+            <div class="countdown-number" id="cd-mins">--</div>
+            <div class="countdown-label">分</div>
+        </div>
+    </div>
+    <div class="exam-note">📅 2026年10月18日（日）試験まで</div>
+</div>
+
+<!-- ===== SYNC STATUS ===== -->
+<div class="sync-bar">
+    <div class="sync-indicator">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncStatus">接続を確認中...</span>
+    </div>
+    <button class="sync-btn-small" onclick="showSetup()">⚙ 設定</button>
+</div>
+
+<!-- ===== OVERALL PROGRESS ===== -->
+<div class="overall-card">
+    <div class="overall-top">
+        <span class="overall-title">📊 全体の学習進捗</span>
+        <span class="overall-pct" id="overall-pct">0%</span>
+    </div>
+    <div class="progress-bar">
+        <div class="progress-fill" id="overall-fill" style="width:0%"></div>
+    </div>
+    <div class="overall-sub" id="overall-sub">0 / 51 セクション完了</div>
+</div>
+
+<!-- ===== TABS ===== -->
+<div class="tabs-wrap">
+    <div class="tabs">
+        <button class="tab active" style="--clr:#1565c0" onclick="showCh(0)">① 権利関係</button>
+        <button class="tab" style="--clr:#e65100" onclick="showCh(1)">② 宅建業法</button>
+        <button class="tab" style="--clr:#2e7d32" onclick="showCh(2)">③ 法令上の制限</button>
+        <button class="tab" style="--clr:#6a1b9a" onclick="showCh(3)">④ 税・その他</button>
+    </div>
+</div>
+
+<!-- ===== CHAPTERS ===== -->
+<div class="chapter active" id="ch-0"></div>
+<div class="chapter" id="ch-1"></div>
+<div class="chapter" id="ch-2"></div>
+<div class="chapter" id="ch-3"></div>
+
+<!-- ===== SETUP MODAL ===== -->
+<div class="modal-overlay" id="setupModal">
+    <div class="modal">
+        <h2>🔧 初期設定</h2>
+        <p class="subtitle">スマホとPCで同期するため、<strong>Googleの無料サービス「Firebase」</strong>と連携します。<br>一度だけ、約5分で設定できます。</p>
+
+        <!-- STEP 1 -->
+        <div class="setup-step">
+            <div class="step-num">STEP 1</div>
+            <div class="step-title">Firebaseプロジェクトを作成</div>
+            <div class="step-desc">
+                下のボタンでFirebaseを開き（Googleアカウントでログイン）→<br>
+                「プロジェクトを作成」→ 名前は「takken2026」など何でもOK → 「続行」で作成完了。
+            </div>
+            <a class="step-link" href="https://console.firebase.google.com/" target="_blank">🔥 Firebaseを開く</a>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="setup-step">
+            <div class="step-num">STEP 2</div>
+            <div class="step-title">Realtime Databaseを有効化</div>
+            <div class="step-desc">
+                プロジェクト画面で左メニュー「構築」→「Realtime Database」→「データベースを作成」→<br>
+                場所は「asia-southeast1（シンガポール）」→「テストモードで開始」を選んで「有効にする」
+            </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="setup-step">
+            <div class="step-num">STEP 3</div>
+            <div class="step-title">ウェブアプリの設定をコピー</div>
+            <div class="step-desc">
+                左メニュー「プロジェクトの概要」横の歯車⚙ → 「プロジェクトの設定」→<br>
+                下にスクロール → 「アプリを追加」→「&lt;/&gt; ウェブ」→ ニックネーム「app」→「アプリを登録」→<br>
+                <strong>「firebaseConfig = { ... }」の{ }の中身</strong>（JSONの部分）をすべてコピーして下に貼り付け。
+            </div>
+            <textarea class="config-input" id="configInput" placeholder='例：
+{
+  "apiKey": "AIzaSy...",
+  "authDomain": "takken2026.firebaseapp.com",
+  "databaseURL": "https://takken2026-default-rtdb.asia-southeast1.firebasedatabase.app",
+  "projectId": "takken2026",
+  "storageBucket": "takken2026.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123456:web:abc123"
+}'></textarea>
+            <div class="error-msg" id="configError"></div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="setup-step">
+            <div class="step-num">STEP 4</div>
+            <div class="step-title">Authentication（認証）を有効化</div>
+            <div class="step-desc">
+                左メニュー「構築」→「Authentication」→「始める」→「新しいプロバイダを追加」→<br>
+                「Google」→ 有効にする → メールアドレスを入力 → 「保存」
+            </div>
+        </div>
+
+        <button class="setup-btn primary" onclick="saveConfig()">✅ 設定を保存してサインイン</button>
+        <button class="setup-btn secondary" onclick="skipSetup()">後で設定する（このデバイスのみで使う）</button>
+
+        <p class="modal-note">
+            ※設定は一度行えば保存されます。<br>
+            ※FirebaseはGoogleの無料サービスです。クレジットカード不要。<br>
+            ※設定後は「URLをブックマーク」するだけで、どのデバイスからもアクセスできます。
+        </p>
+    </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+// =============================================
+// SECTION DATA
+// =============================================
+const CHAPTERS = [
+    {
+        id: 0, name: "① 権利関係", color: "#1565c0",
+        meta: "テキスト 第2章（動画49本）／ 問題集 第2章（全105問）",
+        schedule: "📅 目安：4月19日〜6月20日",
+        sections: [
+            { name: "民法の全体像",           txt: "テキスト Sec.1",  mon: "（全体把握・導入）" },
+            { name: "人の各能力",              txt: "テキスト Sec.2",  mon: "問1-2" },
+            { name: "問題のある意思表示",       txt: "テキスト Sec.3",  mon: "問3-8" },
+            { name: "代理",                    txt: "テキスト Sec.4",  mon: "問9-15" },
+            { name: "意思表示の効力発生時期等", txt: "テキスト Sec.5",  mon: "問16" },
+            { name: "時効",                    txt: "テキスト Sec.6",  mon: "問17-19" },
+            { name: "債務不履行",              txt: "テキスト Sec.7",  mon: "問20-25" },
+            { name: "契約不適合責任",          txt: "テキスト Sec.8",  mon: "問26-28" },
+            { name: "債権の消滅",              txt: "テキスト Sec.9",  mon: "問29-31" },
+            { name: "債権譲渡",                txt: "テキスト Sec.10", mon: "問32-33" },
+            { name: "多数当事者の債権債務",     txt: "テキスト Sec.11", mon: "問34-37" },
+            { name: "相隣関係・共有",          txt: "テキスト Sec.12", mon: "問38-42" },
+            { name: "地上権・地役権",          txt: "テキスト Sec.13", mon: "問43" },
+            { name: "抵当権",                  txt: "テキスト Sec.14", mon: "問44-51" },
+            { name: "質権・先取特権・留置権",   txt: "テキスト Sec.15", mon: "問52-54" },
+            { name: "売買契約",                txt: "テキスト Sec.16", mon: "（問題集参照）" },
+            { name: "賃貸借契約・借地借家法",   txt: "テキスト Sec.17", mon: "問55-76" },
+            { name: "その他の契約",            txt: "テキスト Sec.18", mon: "問77-78" },
+            { name: "不法行為・不当利得",       txt: "テキスト Sec.19", mon: "問79-81" },
+            { name: "相続",                    txt: "テキスト Sec.20", mon: "問82-90" },
+            { name: "物権変動のまとめ",         txt: "テキスト Sec.21", mon: "問91-95" },
+            { name: "区分所有法",              txt: "テキスト Sec.22", mon: "問96-100" },
+            { name: "不動産登記法",            txt: "テキスト Sec.23", mon: "問101-105" }
+        ]
+    },
+    {
+        id: 1, name: "② 宅建業法", color: "#e65100",
+        meta: "テキスト 第1章（動画33本）／ 問題集 第1章（全95問）",
+        schedule: "📅 目安：6月21日〜8月3日",
+        sections: [
+            { name: "宅建業法の適用",               txt: "テキスト Sec.1",  mon: "問1-3" },
+            { name: "宅建業の免許制度",              txt: "テキスト Sec.2",  mon: "問4-14" },
+            { name: "宅地建物取引士",                txt: "テキスト Sec.3",  mon: "問15-25" },
+            { name: "営業保証金・保証協会",           txt: "テキスト Sec.4",  mon: "問26-35" },
+            { name: "事務所等に関する規制",           txt: "テキスト Sec.5",  mon: "問36-43" },
+            { name: "宅建業者の業務上の規制",         txt: "テキスト Sec.6",  mon: "問44-48" },
+            { name: "媒介・代理契約に関する規制",     txt: "テキスト Sec.7",  mon: "問49-55" },
+            { name: "35条書面（重要事項説明書）",     txt: "テキスト Sec.8",  mon: "問56-64" },
+            { name: "37条書面",                      txt: "テキスト Sec.9",  mon: "問65-72" },
+            { name: "8種規制",                       txt: "テキスト Sec.10", mon: "問73-83" },
+            { name: "住宅瑕疵担保履行法",             txt: "テキスト Sec.11", mon: "問84-86" },
+            { name: "媒介・代理に関する報酬額の制限", txt: "テキスト Sec.12", mon: "問87-90" },
+            { name: "監督・罰則",                    txt: "テキスト Sec.13", mon: "問91-95" },
+            { name: "電磁的方法による提供のまとめ",   txt: "テキスト Sec.14", mon: "（テキストのみ）" }
+        ]
+    },
+    {
+        id: 2, name: "③ 法令上の制限", color: "#2e7d32",
+        meta: "テキスト 第3章（動画21本）／ 問題集 第3章（全60問）",
+        schedule: "📅 目安：8月4日〜9月13日",
+        sections: [
+            { name: "都市計画法",     txt: "テキスト Sec.1", mon: "問1-17" },
+            { name: "建築基準法",     txt: "テキスト Sec.2", mon: "問18-36" },
+            { name: "農地法",         txt: "テキスト Sec.3", mon: "問37-42" },
+            { name: "国土利用計画法", txt: "テキスト Sec.4", mon: "問43-48" },
+            { name: "土地区画整理法", txt: "テキスト Sec.5", mon: "問49-54" },
+            { name: "盛土規制法",     txt: "テキスト Sec.6", mon: "問55-60" }
+        ]
+    },
+    {
+        id: 3, name: "④ 税・その他", color: "#6a1b9a",
+        meta: "テキスト 第4章（動画14本）／ 問題集 第4章（全40問）",
+        schedule: "📅 目安：9月14日〜10月4日",
+        sections: [
+            { name: "税の全体像",       txt: "テキスト Sec.1", mon: "（全体把握・導入）" },
+            { name: "地方税",           txt: "テキスト Sec.2", mon: "問1-6" },
+            { name: "国税",             txt: "テキスト Sec.3", mon: "問7-17" },
+            { name: "価格評定",         txt: "テキスト Sec.4", mon: "問18-24" },
+            { name: "住宅金融支援機構", txt: "テキスト Sec.5", mon: "問25-28" },
+            { name: "景品表示法",       txt: "テキスト Sec.6", mon: "問29-34" },
+            { name: "土地",             txt: "テキスト Sec.7", mon: "問35-37" },
+            { name: "建物",             txt: "テキスト Sec.8", mon: "問38-40" }
+        ]
+    }
+];
+
+const STAR_LABELS = ["", "😓 まだ難しい", "🤔 少し分かってきた", "😊 だいたいOK！", "😄 ほぼ完璧！", "🎉 完全に理解！"];
+
+// =============================================
+// FIREBASE STATE
+// =============================================
+let db = null;
+let currentUser = null;
+let isOfflineMode = false;
+let saveTimer = null;
+
+// =============================================
+// LOCAL STORAGE (FALLBACK + CACHE)
+// =============================================
+function lsKey(chId, idx) { return `tk26_c${chId}_s${idx}`; }
+function lsLoad(chId, idx) {
+    try {
+        const r = localStorage.getItem(lsKey(chId, idx));
+        return r ? JSON.parse(r) : { done: false, stars: 0, memo: "" };
+    } catch(e) { return { done: false, stars: 0, memo: "" }; }
+}
+function lsSave(chId, idx, data) {
+    try { localStorage.setItem(lsKey(chId, idx), JSON.stringify(data)); } catch(e) {}
+}
+
+function loadSec(chId, idx) { return lsLoad(chId, idx); }
+function saveSec(chId, idx, data) {
+    lsSave(chId, idx, data);
+    if (!isOfflineMode) scheduleCloudSave(chId, idx, data);
+}
+
+// =============================================
+// FIREBASE CLOUD SYNC
+// =============================================
+function fbPath(uid, chId, idx) { return `users/${uid}/sections/c${chId}_s${idx}`; }
+
+function scheduleCloudSave(chId, idx, data) {
+    if (!db || !currentUser) return;
+    clearTimeout(saveTimer);
+    setSyncStatus("syncing");
+    saveTimer = setTimeout(async () => {
+        try {
+            const { ref, set } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
+            await set(ref(db, fbPath(currentUser.uid, chId, idx)), data);
+            setSyncStatus("connected");
+            showToast("✅ 保存しました");
+        } catch(e) {
+            setSyncStatus("connected");
+            console.error("Save error:", e);
+        }
+    }, 800);
+}
+
+async function loadFromCloud() {
+    if (!db || !currentUser) return;
+    setSyncStatus("syncing");
+    try {
+        const { ref, get } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
+        const snap = await get(ref(db, `users/${currentUser.uid}/sections`));
+        if (snap.exists()) {
+            const data = snap.val();
+            Object.entries(data).forEach(([k, v]) => {
+                localStorage.setItem(`tk26_${k}`, JSON.stringify(v));
+            });
+            updateAllCards();
+            updateProgress();
+        }
+        setSyncStatus("connected");
+    } catch(e) {
+        setSyncStatus("connected");
+        console.error("Load error:", e);
+    }
+}
+
+// =============================================
+// FIREBASE INIT
+// =============================================
+async function initFirebase() {
+    const savedConfig = localStorage.getItem("tk26_firebase_config");
+    if (!savedConfig) {
+        // First time - show setup after a brief delay
+        setTimeout(() => showSetup(), 500);
+        enterOfflineMode();
+        return;
+    }
+
+    try {
+        const config = JSON.parse(savedConfig);
+        const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+        const { getDatabase } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
+        const { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+
+        const app = getApps().length === 0 ? initializeApp(config) : getApps()[0];
+        db = getDatabase(app);
+        const auth = getAuth(app);
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                showUserInfo(user);
+                await loadFromCloud();
+            } else {
+                // Auto sign-in with Google
+                try {
+                    const provider = new GoogleAuthProvider();
+                    await signInWithPopup(auth, provider);
+                } catch(e) {
+                    enterOfflineMode();
+                }
+            }
+        });
+
+        // Store auth and provider globally for setup modal
+        window._fbAuth = auth;
+        window._fbGoogle = GoogleAuthProvider;
+        window._fbSignInWithPopup = signInWithPopup;
+
+    } catch(e) {
+        console.error("Firebase init error:", e);
+        enterOfflineMode();
+    }
+}
+
+function enterOfflineMode() {
+    isOfflineMode = true;
+    setSyncStatus("offline");
+}
+
+// =============================================
+// UI HELPERS
+// =============================================
+function setSyncStatus(state) {
+    const dot = document.getElementById("syncDot");
+    const txt = document.getElementById("syncStatus");
+    dot.className = "sync-dot";
+    if (state === "connected") {
+        dot.classList.add("connected");
+        txt.textContent = `✓ 同期中 — ${currentUser?.email || ""}`;
+    } else if (state === "syncing") {
+        dot.classList.add("syncing");
+        txt.textContent = "⟳ 保存中...";
+    } else {
+        txt.textContent = "⚠ オフラインモード（このデバイスのみ保存）";
+    }
+}
+
+function showUserInfo(user) {
+    const bar = document.querySelector(".sync-bar");
+    if (bar) {
+        bar.style.background = "#1b5e20";
+    }
+    setSyncStatus("connected");
+}
+
+function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+function showSetup() {
+    document.getElementById("setupModal").classList.add("show");
+}
+
+function skipSetup() {
+    document.getElementById("setupModal").classList.remove("show");
+    if (!currentUser) enterOfflineMode();
+}
+
+window.showSetup = showSetup;
+window.skipSetup = skipSetup;
+
+window.saveConfig = async function() {
+    const raw = document.getElementById("configInput").value.trim();
+    const errEl = document.getElementById("configError");
+    errEl.style.display = "none";
+
+    if (!raw) {
+        errEl.textContent = "⚠ Firebase設定を貼り付けてください";
+        errEl.style.display = "block";
+        return;
+    }
+
+    // Clean up: accept both object literal and JSON
+    let cleaned = raw;
+    // Remove "const firebaseConfig = " prefix if present
+    cleaned = cleaned.replace(/^.*?=\s*/, "").replace(/;?\s*$/, "");
+    // Convert JS object to JSON (quote unquoted keys)
+    try {
+        cleaned = cleaned.replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3');
+        const config = JSON.parse(cleaned);
+
+        if (!config.apiKey || !config.projectId) {
+            throw new Error("invalid");
+        }
+
+        // Add databaseURL if missing (try to construct it)
+        if (!config.databaseURL && config.projectId) {
+            config.databaseURL = `https://${config.projectId}-default-rtdb.asia-southeast1.firebasedatabase.app`;
+        }
+
+        localStorage.setItem("tk26_firebase_config", JSON.stringify(config));
+        document.getElementById("setupModal").classList.remove("show");
+        showToast("✅ 設定を保存しました。Googleサインイン中...");
+
+        // Re-init firebase
+        isOfflineMode = false;
+        await initFirebase();
+
+    } catch(e) {
+        errEl.textContent = "⚠ 設定の形式が正しくありません。{ } の中身をそのまま貼り付けてください。";
+        errEl.style.display = "block";
+    }
+};
+
+// =============================================
+// RENDER CHAPTERS
+// =============================================
+function starStr(n) {
+    let s = "";
+    for (let i = 1; i <= 5; i++) s += i <= n ? "⭐" : "☆";
+    return s;
+}
+
+function renderAll() {
+    CHAPTERS.forEach(ch => {
+        const wrap = document.getElementById(`ch-${ch.id}`);
+
+        const head = document.createElement("div");
+        head.className = "chapter-head";
+        head.style.background = `linear-gradient(135deg, ${ch.color}, ${ch.color}cc)`;
+        head.innerHTML = `
+            <h2>${ch.name}</h2>
+            <div class="meta">${ch.meta}</div>
+            <div class="schedule-chip">${ch.schedule}</div>
+            <div class="ch-prog-bar"><div class="ch-prog-fill" id="chfill-${ch.id}" style="width:0%"></div></div>
+            <div class="ch-count" id="chcnt-${ch.id}">0 / ${ch.sections.length} セクション完了</div>
+        `;
+        wrap.appendChild(head);
+
+        ch.sections.forEach((sec, idx) => {
+            const d = loadSec(ch.id, idx);
+            const card = document.createElement("div");
+            card.className = "sec-card";
+            card.id = `card-${ch.id}-${idx}`;
+            card.innerHTML = `
+                <div class="sec-head" onclick="toggleCard(${ch.id},${idx})">
+                    <div class="sec-check ${d.done ? 'done' : ''}" id="chk-${ch.id}-${idx}">${d.done ? '✓' : ''}</div>
+                    <div class="sec-info">
+                        <div class="sec-name">${sec.name}</div>
+                        <div class="sec-refs">📖 ${sec.txt} ／ 📝 ${sec.mon}</div>
+                    </div>
+                    <div class="sec-stars-preview" id="prev-${ch.id}-${idx}">${starStr(d.stars)}</div>
+                    <div class="sec-arrow">▼</div>
+                </div>
+                <div class="sec-body">
+                    <div class="body-label">理解度</div>
+                    <div class="star-row" id="starrow-${ch.id}-${idx}">
+                        ${[1,2,3,4,5].map(i => `<button class="star-btn" id="sb-${ch.id}-${idx}-${i}" onclick="setStarG(${ch.id},${idx},${i})">${i <= d.stars ? '⭐' : '☆'}</button>`).join('')}
+                    </div>
+                    <div class="star-level-label" id="slbl-${ch.id}-${idx}">${STAR_LABELS[d.stars] || "⬆ タップして理解度を記録"}</div>
+                    <div class="body-label">メモ・気づき</div>
+                    <textarea class="memo-input" id="memo-${ch.id}-${idx}" placeholder="覚えにくいポイント、気づいたこと、語呂合わせなど..." oninput="saveMemoG(${ch.id},${idx})">${d.memo}</textarea>
+                    <button class="complete-btn ${d.done ? 'done' : 'not-done'}" id="cbtn-${ch.id}-${idx}" onclick="toggleDoneG(${ch.id},${idx})">
+                        ${d.done ? '✅ 完了済み（タップで未完了に戻す）' : '☑ このセクションを完了にする'}
+                    </button>
+                </div>
+            `;
+            wrap.appendChild(card);
+        });
+    });
+}
+
+function updateAllCards() {
+    CHAPTERS.forEach(ch => {
+        ch.sections.forEach((_, idx) => {
+            const d = loadSec(ch.id, idx);
+            const chk = document.getElementById(`chk-${ch.id}-${idx}`);
+            const btn = document.getElementById(`cbtn-${ch.id}-${idx}`);
+            const prev = document.getElementById(`prev-${ch.id}-${idx}`);
+            const slbl = document.getElementById(`slbl-${ch.id}-${idx}`);
+            const memo = document.getElementById(`memo-${ch.id}-${idx}`);
+            if (!chk) return;
+
+            chk.className = "sec-check" + (d.done ? " done" : "");
+            chk.textContent = d.done ? "✓" : "";
+            btn.className = "complete-btn " + (d.done ? "done" : "not-done");
+            btn.textContent = d.done ? "✅ 完了済み（タップで未完了に戻す）" : "☑ このセクションを完了にする";
+            prev.textContent = starStr(d.stars);
+            slbl.textContent = STAR_LABELS[d.stars] || "⬆ タップして理解度を記録";
+            memo.value = d.memo;
+
+            for (let i = 1; i <= 5; i++) {
+                const sb = document.getElementById(`sb-${ch.id}-${idx}-${i}`);
+                if (sb) sb.textContent = i <= d.stars ? "⭐" : "☆";
+            }
+        });
+    });
+}
+
+// =============================================
+// GLOBAL INTERACTION HANDLERS
+// =============================================
+window.toggleCard = function(chId, idx) {
+    document.getElementById(`card-${chId}-${idx}`).classList.toggle("expanded");
+};
+
+window.setStarG = function(chId, idx, val) {
+    const d = loadSec(chId, idx);
+    d.stars = val;
+    saveSec(chId, idx, d);
+    for (let i = 1; i <= 5; i++) {
+        document.getElementById(`sb-${chId}-${idx}-${i}`).textContent = i <= val ? '⭐' : '☆';
+    }
+    document.getElementById(`slbl-${chId}-${idx}`).textContent = STAR_LABELS[val] || "";
+    document.getElementById(`prev-${chId}-${idx}`).textContent = starStr(val);
+};
+
+window.saveMemoG = function(chId, idx) {
+    const d = loadSec(chId, idx);
+    d.memo = document.getElementById(`memo-${chId}-${idx}`).value;
+    saveSec(chId, idx, d);
+};
+
+window.toggleDoneG = function(chId, idx) {
+    const d = loadSec(chId, idx);
+    d.done = !d.done;
+    saveSec(chId, idx, d);
+
+    const chk = document.getElementById(`chk-${chId}-${idx}`);
+    const btn = document.getElementById(`cbtn-${chId}-${idx}`);
+    chk.className = "sec-check" + (d.done ? " done" : "");
+    chk.textContent = d.done ? "✓" : "";
+    btn.className = "complete-btn " + (d.done ? "done" : "not-done");
+    btn.textContent = d.done ? "✅ 完了済み（タップで未完了に戻す）" : "☑ このセクションを完了にする";
+    updateProgress();
+    if (d.done) showToast("✅ 完了！どんどん進めましょう！");
+};
+
+// =============================================
+// PROGRESS
+// =============================================
+function updateProgress() {
+    let total = 0, done = 0;
+    CHAPTERS.forEach(ch => {
+        let chDone = 0;
+        ch.sections.forEach((_, idx) => {
+            total++;
+            if (loadSec(ch.id, idx).done) { chDone++; done++; }
+        });
+        const pct = ch.sections.length ? Math.round(chDone / ch.sections.length * 100) : 0;
+        document.getElementById(`chfill-${ch.id}`).style.width = pct + "%";
+        document.getElementById(`chcnt-${ch.id}`).textContent = `${chDone} / ${ch.sections.length} セクション完了`;
+    });
+    const pct = total ? Math.round(done / total * 100) : 0;
+    document.getElementById("overall-fill").style.width = pct + "%";
+    document.getElementById("overall-pct").textContent = pct + "%";
+    document.getElementById("overall-sub").textContent = `${done} / ${total} セクション完了`;
+}
+
+// =============================================
+// CHAPTER TABS
+// =============================================
+window.showCh = function(idx) {
+    document.querySelectorAll(".chapter").forEach((el, i) => el.classList.toggle("active", i === idx));
+    document.querySelectorAll(".tab").forEach((el, i) => el.classList.toggle("active", i === idx));
+};
+
+// =============================================
+// COUNTDOWN
+// =============================================
+function tick() {
+    const exam = new Date("2026-10-18T09:00:00");
+    const diff = exam - new Date();
+    if (diff <= 0) return;
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    document.getElementById("cd-days").textContent = d;
+    document.getElementById("cd-hours").textContent = h;
+    document.getElementById("cd-mins").textContent = String(m).padStart(2, "0");
+}
+
+// =============================================
+// INIT
+// =============================================
+renderAll();
+updateProgress();
+tick();
+setInterval(tick, 60000);
+initFirebase();
+</script>
+</body>
+</html>
