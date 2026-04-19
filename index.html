@@ -124,97 +124,6 @@
         .complete-btn.done { background: #43a047; color: white; }
         .complete-btn:active { opacity: 0.8; }
 
-        /* ===== SETUP MODAL ===== */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 1000;
-            overflow-y: auto;
-        }
-        .modal-overlay.show { display: flex; align-items: flex-start; justify-content: center; padding: 20px; }
-        .modal {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            width: 100%;
-            max-width: 560px;
-            margin-top: 10px;
-        }
-        .modal h2 { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
-        .modal .subtitle { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.6; }
-
-        .setup-step {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 14px;
-            border-left: 4px solid #e53935;
-        }
-        .setup-step .step-num { font-size: 11px; font-weight: 800; color: #e53935; letter-spacing: 1px; margin-bottom: 4px; }
-        .setup-step .step-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
-        .setup-step .step-desc { font-size: 12px; color: #555; line-height: 1.7; }
-
-        .step-link {
-            display: inline-block;
-            background: #1976d2;
-            color: white;
-            border-radius: 8px;
-            padding: 6px 14px;
-            font-size: 12px;
-            font-weight: 700;
-            text-decoration: none;
-            margin-top: 8px;
-        }
-
-        .config-input {
-            width: 100%;
-            height: 120px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 10px;
-            font-size: 11px;
-            font-family: monospace;
-            resize: vertical;
-            outline: none;
-            margin-top: 8px;
-            transition: border-color 0.2s;
-        }
-        .config-input:focus { border-color: #1976d2; }
-
-        .setup-btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: inherit;
-            margin-top: 8px;
-        }
-        .setup-btn.primary { background: #e53935; color: white; }
-        .setup-btn.google { background: white; color: #444; border: 2px solid #e0e0e0; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .setup-btn:active { opacity: 0.8; }
-        .setup-btn.secondary { background: #f5f5f5; color: #555; font-size: 13px; margin-top: 6px; }
-
-        .modal-note { font-size: 11px; color: #999; text-align: center; margin-top: 14px; line-height: 1.6; }
-        .error-msg { background: #ffebee; color: #c62828; border-radius: 8px; padding: 10px 12px; font-size: 12px; margin-top: 10px; display: none; }
-
-        /* ===== AUTH SECTION ===== */
-        .auth-section { margin: 10px 10px 0; }
-        .auth-card {
-            background: white;
-            border-radius: 14px;
-            padding: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-            text-align: center;
-        }
-        .auth-card .user-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-        .auth-card .user-email { font-size: 12px; color: #888; }
-        .sign-out-link { font-size: 11px; color: #e53935; cursor: pointer; margin-top: 6px; display: inline-block; }
-
         /* ===== TOAST ===== */
         .toast {
             position: fixed;
@@ -261,7 +170,7 @@
         <div class="sync-dot" id="syncDot"></div>
         <span id="syncStatus">接続を確認中...</span>
     </div>
-    <button class="sync-btn-small" onclick="showSetup()">⚙ 設定</button>
+    <button class="sync-btn-small" onclick="showToast('データはこのデバイスに自動保存されています')">💾 保存中</button>
 </div>
 
 <!-- ===== OVERALL PROGRESS ===== -->
@@ -292,80 +201,10 @@
 <div class="chapter" id="ch-2"></div>
 <div class="chapter" id="ch-3"></div>
 
-<!-- ===== SETUP MODAL ===== -->
-<div class="modal-overlay" id="setupModal">
-    <div class="modal">
-        <h2>🔧 初期設定</h2>
-        <p class="subtitle">スマホとPCで同期するため、<strong>Googleの無料サービス「Firebase」</strong>と連携します。<br>一度だけ、約5分で設定できます。</p>
-
-        <!-- STEP 1 -->
-        <div class="setup-step">
-            <div class="step-num">STEP 1</div>
-            <div class="step-title">Firebaseプロジェクトを作成</div>
-            <div class="step-desc">
-                下のボタンでFirebaseを開き（Googleアカウントでログイン）→<br>
-                「プロジェクトを作成」→ 名前は「takken2026」など何でもOK → 「続行」で作成完了。
-            </div>
-            <a class="step-link" href="https://console.firebase.google.com/" target="_blank">🔥 Firebaseを開く</a>
-        </div>
-
-        <!-- STEP 2 -->
-        <div class="setup-step">
-            <div class="step-num">STEP 2</div>
-            <div class="step-title">Realtime Databaseを有効化</div>
-            <div class="step-desc">
-                プロジェクト画面で左メニュー「構築」→「Realtime Database」→「データベースを作成」→<br>
-                場所は「asia-southeast1（シンガポール）」→「テストモードで開始」を選んで「有効にする」
-            </div>
-        </div>
-
-        <!-- STEP 3 -->
-        <div class="setup-step">
-            <div class="step-num">STEP 3</div>
-            <div class="step-title">ウェブアプリの設定をコピー</div>
-            <div class="step-desc">
-                左メニュー「プロジェクトの概要」横の歯車⚙ → 「プロジェクトの設定」→<br>
-                下にスクロール → 「アプリを追加」→「&lt;/&gt; ウェブ」→ ニックネーム「app」→「アプリを登録」→<br>
-                <strong>「firebaseConfig = { ... }」の{ }の中身</strong>（JSONの部分）をすべてコピーして下に貼り付け。
-            </div>
-            <textarea class="config-input" id="configInput" placeholder='例：
-{
-  "apiKey": "AIzaSy...",
-  "authDomain": "takken2026.firebaseapp.com",
-  "databaseURL": "https://takken2026-default-rtdb.asia-southeast1.firebasedatabase.app",
-  "projectId": "takken2026",
-  "storageBucket": "takken2026.appspot.com",
-  "messagingSenderId": "123456789",
-  "appId": "1:123456:web:abc123"
-}'></textarea>
-            <div class="error-msg" id="configError"></div>
-        </div>
-
-        <!-- STEP 4 -->
-        <div class="setup-step">
-            <div class="step-num">STEP 4</div>
-            <div class="step-title">Authentication（認証）を有効化</div>
-            <div class="step-desc">
-                左メニュー「構築」→「Authentication」→「始める」→「新しいプロバイダを追加」→<br>
-                「Google」→ 有効にする → メールアドレスを入力 → 「保存」
-            </div>
-        </div>
-
-        <button class="setup-btn primary" onclick="saveConfig()">✅ 設定を保存してサインイン</button>
-        <button class="setup-btn secondary" onclick="skipSetup()">後で設定する（このデバイスのみで使う）</button>
-
-        <p class="modal-note">
-            ※設定は一度行えば保存されます。<br>
-            ※FirebaseはGoogleの無料サービスです。クレジットカード不要。<br>
-            ※設定後は「URLをブックマーク」するだけで、どのデバイスからもアクセスできます。
-        </p>
-    </div>
-</div>
-
 <!-- ===== TOAST ===== -->
 <div class="toast" id="toast"></div>
 
-<script type="module">
+<script>
 // =============================================
 // SECTION DATA
 // =============================================
@@ -454,159 +293,21 @@ const CHAPTERS = [
 const STAR_LABELS = ["", "😓 まだ難しい", "🤔 少し分かってきた", "😊 だいたいOK！", "😄 ほぼ完璧！", "🎉 完全に理解！"];
 
 // =============================================
-// FIREBASE STATE
+// LOCAL STORAGE（シンプル保存）
 // =============================================
-let db = null;
-let currentUser = null;
-let isOfflineMode = false;
-let saveTimer = null;
-
-// =============================================
-// LOCAL STORAGE (FALLBACK + CACHE)
-// =============================================
-function lsKey(chId, idx) { return `tk26_c${chId}_s${idx}`; }
-function lsLoad(chId, idx) {
+function loadSec(chId, idx) {
     try {
-        const r = localStorage.getItem(lsKey(chId, idx));
+        const r = localStorage.getItem(`tk26_c${chId}_s${idx}`);
         return r ? JSON.parse(r) : { done: false, stars: 0, memo: "" };
     } catch(e) { return { done: false, stars: 0, memo: "" }; }
 }
-function lsSave(chId, idx, data) {
-    try { localStorage.setItem(lsKey(chId, idx), JSON.stringify(data)); } catch(e) {}
-}
-
-function loadSec(chId, idx) { return lsLoad(chId, idx); }
 function saveSec(chId, idx, data) {
-    lsSave(chId, idx, data);
-    if (!isOfflineMode) scheduleCloudSave(chId, idx, data);
-}
-
-// =============================================
-// FIREBASE CLOUD SYNC
-// =============================================
-function fbPath(uid, chId, idx) { return `users/${uid}/sections/c${chId}_s${idx}`; }
-
-function scheduleCloudSave(chId, idx, data) {
-    if (!db || !currentUser) return;
-    clearTimeout(saveTimer);
-    setSyncStatus("syncing");
-    saveTimer = setTimeout(async () => {
-        try {
-            const { ref, set } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
-            await set(ref(db, fbPath(currentUser.uid, chId, idx)), data);
-            setSyncStatus("connected");
-            showToast("✅ 保存しました");
-        } catch(e) {
-            setSyncStatus("connected");
-            console.error("Save error:", e);
-        }
-    }, 800);
-}
-
-async function loadFromCloud() {
-    if (!db || !currentUser) return;
-    setSyncStatus("syncing");
-    try {
-        const { ref, get } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
-        const snap = await get(ref(db, `users/${currentUser.uid}/sections`));
-        if (snap.exists()) {
-            const data = snap.val();
-            Object.entries(data).forEach(([k, v]) => {
-                localStorage.setItem(`tk26_${k}`, JSON.stringify(v));
-            });
-            updateAllCards();
-            updateProgress();
-        }
-        setSyncStatus("connected");
-    } catch(e) {
-        setSyncStatus("connected");
-        console.error("Load error:", e);
-    }
-}
-
-// =============================================
-// FIREBASE INIT
-// =============================================
-async function initFirebase() {
-    const savedConfig = localStorage.getItem("tk26_firebase_config");
-    if (!savedConfig) {
-        // Firebase未設定 → そのままオフラインモードで起動（モーダルは表示しない）
-        enterOfflineMode();
-        return;
-    }
-
-    try {
-        const config = JSON.parse(savedConfig);
-        const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-        const { getDatabase } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
-        const { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
-
-        const app = getApps().length === 0 ? initializeApp(config) : getApps()[0];
-        db = getDatabase(app);
-        const auth = getAuth(app);
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-                showUserInfo(user);
-                await loadFromCloud();
-            } else {
-                // Auto sign-in with Google
-                try {
-                    const provider = new GoogleAuthProvider();
-                    await signInWithPopup(auth, provider);
-                } catch(e) {
-                    enterOfflineMode();
-                }
-            }
-        });
-
-        // Store auth and provider globally for setup modal
-        window._fbAuth = auth;
-        window._fbGoogle = GoogleAuthProvider;
-        window._fbSignInWithPopup = signInWithPopup;
-
-    } catch(e) {
-        console.error("Firebase init error:", e);
-        enterOfflineMode();
-    }
-}
-
-function enterOfflineMode() {
-    isOfflineMode = true;
-    const dot = document.getElementById("syncDot");
-    const txt = document.getElementById("syncStatus");
-    dot.className = "sync-dot connected";
-    txt.textContent = "✓ このデバイスに自動保存中";
-    document.querySelector(".sync-bar").style.background = "#37474f";
+    try { localStorage.setItem(`tk26_c${chId}_s${idx}`, JSON.stringify(data)); } catch(e) {}
 }
 
 // =============================================
 // UI HELPERS
 // =============================================
-function setSyncStatus(state) {
-    const dot = document.getElementById("syncDot");
-    const txt = document.getElementById("syncStatus");
-    dot.className = "sync-dot";
-    if (state === "connected") {
-        dot.classList.add("connected");
-        txt.textContent = `✓ 同期中 — ${currentUser?.email || ""}`;
-    } else if (state === "syncing") {
-        dot.classList.add("syncing");
-        txt.textContent = "⟳ 保存中...";
-    } else {
-        txt.textContent = "⚠ オフラインモード（このデバイスのみ保存）";
-    }
-}
-
-function showUserInfo(user) {
-    const bar = document.querySelector(".sync-bar");
-    if (bar) {
-        bar.style.background = "#1b5e20";
-    }
-    setSyncStatus("connected");
-}
-
 function showToast(msg) {
     const t = document.getElementById("toast");
     t.textContent = msg;
@@ -614,60 +315,13 @@ function showToast(msg) {
     setTimeout(() => t.classList.remove("show"), 2500);
 }
 
-function showSetup() {
-    document.getElementById("setupModal").classList.add("show");
+function initApp() {
+    const dot = document.getElementById("syncDot");
+    const txt = document.getElementById("syncStatus");
+    dot.className = "sync-dot connected";
+    txt.textContent = "✓ このデバイスに自動保存中";
+    document.querySelector(".sync-bar").style.background = "#37474f";
 }
-
-function skipSetup() {
-    document.getElementById("setupModal").classList.remove("show");
-    if (!currentUser) enterOfflineMode();
-}
-
-window.showSetup = showSetup;
-window.skipSetup = skipSetup;
-
-window.saveConfig = async function() {
-    const raw = document.getElementById("configInput").value.trim();
-    const errEl = document.getElementById("configError");
-    errEl.style.display = "none";
-
-    if (!raw) {
-        errEl.textContent = "⚠ Firebase設定を貼り付けてください";
-        errEl.style.display = "block";
-        return;
-    }
-
-    // Clean up: accept both object literal and JSON
-    let cleaned = raw;
-    // Remove "const firebaseConfig = " prefix if present
-    cleaned = cleaned.replace(/^.*?=\s*/, "").replace(/;?\s*$/, "");
-    // Convert JS object to JSON (quote unquoted keys)
-    try {
-        cleaned = cleaned.replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3');
-        const config = JSON.parse(cleaned);
-
-        if (!config.apiKey || !config.projectId) {
-            throw new Error("invalid");
-        }
-
-        // Add databaseURL if missing (try to construct it)
-        if (!config.databaseURL && config.projectId) {
-            config.databaseURL = `https://${config.projectId}-default-rtdb.asia-southeast1.firebasedatabase.app`;
-        }
-
-        localStorage.setItem("tk26_firebase_config", JSON.stringify(config));
-        document.getElementById("setupModal").classList.remove("show");
-        showToast("✅ 設定を保存しました。Googleサインイン中...");
-
-        // Re-init firebase
-        isOfflineMode = false;
-        await initFirebase();
-
-    } catch(e) {
-        errEl.textContent = "⚠ 設定の形式が正しくありません。{ } の中身をそのまま貼り付けてください。";
-        errEl.style.display = "block";
-    }
-};
 
 // =============================================
 // RENDER CHAPTERS
@@ -844,7 +498,7 @@ renderAll();
 updateProgress();
 tick();
 setInterval(tick, 60000);
-initFirebase();
+initApp();
 </script>
 </body>
 </html>
