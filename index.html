@@ -530,8 +530,7 @@ async function loadFromCloud() {
 async function initFirebase() {
     const savedConfig = localStorage.getItem("tk26_firebase_config");
     if (!savedConfig) {
-        // First time - show setup after a brief delay
-        setTimeout(() => showSetup(), 500);
+        // Firebase未設定 → そのままオフラインモードで起動（モーダルは表示しない）
         enterOfflineMode();
         return;
     }
@@ -575,7 +574,11 @@ async function initFirebase() {
 
 function enterOfflineMode() {
     isOfflineMode = true;
-    setSyncStatus("offline");
+    const dot = document.getElementById("syncDot");
+    const txt = document.getElementById("syncStatus");
+    dot.className = "sync-dot connected";
+    txt.textContent = "✓ このデバイスに自動保存中";
+    document.querySelector(".sync-bar").style.background = "#37474f";
 }
 
 // =============================================
